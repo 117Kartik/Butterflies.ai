@@ -1,4 +1,4 @@
-import json, re
+import json, re, os
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
@@ -6,10 +6,12 @@ from sqlalchemy.orm import Session
 from .database import Base, engine, get_db
 from .models import ActionItem, Meeting, Participant, TranscriptSegment
 from .seed import seed
+allowed_origins=[origin.strip() for origin in os.getenv('CORS_ORIGINS','').split(',') if origin.strip()]
 app=FastAPI(title='Butterflies.ai API'); app.add_middleware(
     CORSMiddleware,
     # Supports localhost plus LAN/preview addresses used by the development server.
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+)(:\d+)?$",
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|[a-z0-9-]+\.vercel\.app)(:\d+)?$",
     allow_methods=['*'],
     allow_headers=['*'],
 )
