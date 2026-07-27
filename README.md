@@ -1,81 +1,123 @@
 # Butterflies.ai
 
-A polished meeting-intelligence workspace inspired by the core Fireflies-style workflow: searchable meeting records, synchronized transcripts, AI summaries, and action tracking.
+A polished meeting-intelligence workspace inspired by Fireflies.ai. It helps users review meetings, search meeting records, inspect transcripts, and save manual meeting entries.
 
-## Features
+## Current feature status
 
-- Responsive SaaS dashboard with meeting search, participant avatars, skeleton loading, and empty states
-- Meeting detail view with a simulated media player and synchronized transcript
-- AI summary, topics, chapters, and action items
-- REST API for meeting and action-item CRUD
-- TXT, JSON, and VTT transcript imports
-- SQLite persistence and automatic realistic seed data
-- Coming-soon integration gallery
+### Working now
 
-## Stack
+- **Supabase-backed profile flow:** Create a profile with name, email, and password; return through the sign-in page; the active profile name appears in the sidebar.
+- **Supabase meeting data:** Meetings, participants, transcript segments, and action items are read from Supabase. New manual meetings are saved there.
+- **Dashboard:** Search meeting titles, newest/oldest sorting, cards, skeleton loading, empty states, and responsive navigation.
+- **Meeting detail:** Simulated media player, clickable transcript timestamps, current-line highlighting, transcript search/highlighting, summary, topics, chapters, and action items.
+- **Manual meeting entry:** Use **New** to create a meeting with current date/time, duration, and comma-separated participants.
+- **Theme:** Appearance control in Settings toggles light/dark mode and keeps the choice while navigating.
+- **Navigation:** Sidebar pages, profile dropdown, sign out, and “Log in with another ID” are wired.
+- **Deployment:** The frontend is ready for Vercel. Supabase is the deployed data backend.
+
+### Placeholder / not yet implemented
+
+- Calendar, Zoom, Google Meet, Microsoft Teams, CRM, and Live Meeting Bot integrations
+- Real audio/video uploads and speech-to-text
+- Real calendar synchronization
+- Team collaboration, sharing permissions, comments, and notifications
+- Production-grade authentication and authorization
+- Transcript file upload in the deployed Supabase flow
+
+> **Demo security note:** The current sign-in flow is a demo profile lookup with client-side password verification and public Supabase demo policies. It is not production authentication. Do not use real passwords or sensitive data. For production, replace it with Supabase Auth and restrictive Row Level Security policies.
+
+## Technology
 
 | Area | Technology |
 | --- | --- |
-| Frontend | Next.js 15, TypeScript, Tailwind CSS, Framer Motion, Radix primitives |
-| Backend | FastAPI, SQLAlchemy |
-| Database | SQLite |
+| Frontend | Next.js 15, TypeScript, Tailwind CSS, Framer Motion, Lucide icons |
+| Deployed data backend | Supabase Postgres + REST API |
+| Local API prototype | FastAPI, SQLAlchemy, SQLite |
+| Deployment | Vercel frontend + Supabase backend |
 
-## Structure
+## Architecture
+
+The production/demo deployment uses the browser-to-Supabase path below. The FastAPI/SQLite API remains in the repository as the original local backend prototype.
 
 ```text
-frontend/                 Next.js application
-  app/                    dashboard, detail and integration routes
-  components/             shared shell, navigation and meeting UI
-  lib/                    API client and types
-backend/app/              FastAPI API, ORM models and seed data
+Next.js on Vercel
+      |
+      | Supabase public URL + anon key
+      v
+Supabase Postgres
+  ├── workspace_users
+  ├── meetings
+  ├── participants
+  ├── transcript_segments
+  └── action_items
 ```
 
-## Data model
+## Setup
 
-`Meeting` has one-to-many relationships to `Participant`, `TranscriptSegment`, and `ActionItem`. Meeting summaries, topics, and chapters are stored with each meeting; transcript content is normalized into its own table.
+### 1. Configure Supabase
 
-## Run locally
+Create a Supabase project. In **SQL Editor**, run [supabase/schema.sql](supabase/schema.sql) to create and seed the meeting tables.
 
-1. Install frontend dependencies:
+For the demo profile flow, also run:
 
-   ```bash
-   cd frontend
-   npm install
-   ```
+```sql
+create table if not exists public.workspace_users (
+  id uuid primary key default gen_random_uuid(),
+  full_name text not null,
+  email text not null unique,
+  password_hash text,
+  password_salt text,
+  created_at timestamptz not null default now()
+);
 
-2. Create a Python environment and install backend dependencies:
+alter table public.workspace_users enable row level security;
 
-   ```bash
-   python -m venv .venv
-   .venv\Scripts\activate
-   pip install -r backend/requirements.txt
-   ```
+create policy "Demo profiles can insert"
+on public.workspace_users for insert to anon with check (true);
 
-3. Start the seeded backend:
+create policy "Demo profiles can read"
+on public.workspace_users for select to anon using (true);
+```
 
-   ```bash
-   python -m uvicorn app.main:app --app-dir backend --reload
-   ```
+### 2. Configure environment variables
 
-4. Start Next.js in a second terminal:
+Create `frontend/.env.local` from [frontend/.env.example](frontend/.env.example):
 
-   ```bash
-   npm run dev
-   ```
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
 
-Open `http://localhost:3000`. Set `NEXT_PUBLIC_API_URL` when deploying separately.
+Never commit `.env.local`. The `.gitignore` rules exclude it and other credential files.
 
-### Supabase authentication
+### 3. Run locally
 
-Create a Supabase project, enable Email authentication, then create `frontend/.env.local` from `.env.example` and set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. The `/signup` and `/login` pages use Supabase Auth directly with the public anon key.
+```powershell
+cd frontend
+npm.cmd install
+npm.cmd run dev
+```
 
-## API
+Open `http://localhost:3000`.
 
-- `GET /meetings?search=` and `GET /meetings/{id}`
-- `POST`, `PUT`, `DELETE /meetings/{id}`
-- `POST /meetings/{id}/actions`, `PATCH`, `DELETE /actions/{id}`
-- `POST /upload/{meeting_id}` for `.txt`, `.json`, or `.vtt`
+## Deploy to Vercel
 
-## Assumptions
+1. Import the GitHub repository into Vercel.
+2. Set the Vercel **Root Directory** to `frontend`.
+3. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` under Vercel Environment Variables.
+4. Deploy.
 
-Authentication uses a default workspace user. Recording playback is a polished simulated player; media storage and speech-to-text are intentionally future integrations.
+Pushes to `main` trigger future Vercel deployments automatically.
+
+## Local FastAPI prototype
+
+The original FastAPI + SQLite implementation remains available for local API experimentation:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r backend/requirements.txt
+python -m uvicorn app.main:app --app-dir backend --reload
+```
+
+The hosted frontend does not currently call this API.
