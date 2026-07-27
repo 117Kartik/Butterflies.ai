@@ -15,7 +15,7 @@ export default function Sidebar(){
   const switchUser=()=>{localStorage.removeItem('butterflies-user');setUser(null);router.push('/login')};
   const logout=()=>{localStorage.removeItem('butterflies-user');setUser(null);setOpen(false);router.push('/')};
   const name=user?.full_name||''; const initials=name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
-  return <aside className="hidden lg:flex w-[250px] shrink-0 flex-col border-r border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+  return <aside className="sticky top-0 hidden h-screen self-start lg:flex w-[250px] shrink-0 flex-col border-r border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
     <Link href="/" className="mb-9 flex items-center gap-2 px-2"><span className="grid h-8 w-8 place-items-center rounded-lg bg-lilac text-lg font-bold text-white">b</span><span className="text-[21px] font-bold tracking-tight dark:text-white">Butterflies <b className="font-medium text-lilac">ai</b></span></Link>
     <nav className="space-y-1">{nav.map(([label,Icon,href])=>item(label as string,Icon,href as string))}</nav>
     <div className="mt-7"><p className="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Workspace</p>{workspace.map(([label,Icon,href])=>item(label as string,Icon,href as string))}</div>

@@ -24,6 +24,12 @@ A polished meeting-intelligence workspace inspired by Fireflies.ai. It helps use
 - Production-grade authentication and authorization
 - Transcript file upload in the deployed Supabase flow
 
+### Not completed in this deployment
+
+- **Separate FastAPI deployment:** We prepared FastAPI/SQLite deployment files, but did not deploy the API to Render because persistent SQLite storage requires a paid disk. Koyeb was unavailable for this setup. The deployed app therefore uses Supabase directly instead.
+- **Authorization:** User roles, secure sessions, protected pages, and row-level per-user data access are not implemented. The current Supabase table policies are intentionally open for a demo.
+- **Secure password storage:** Passwords are not stored as plaintext, but the browser-based demo hash verification is not a replacement for Supabase Auth.
+
 > **Demo security note:** The current sign-in flow is a demo profile lookup with client-side password verification and public Supabase demo policies. It is not production authentication. Do not use real passwords or sensitive data. For production, replace it with Supabase Auth and restrictive Row Level Security policies.
 
 ## Technology
