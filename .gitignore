@@ -3,5 +3,12 @@ frontend/.next/
 backend/*.db
 backend/__pycache__/
 backend/app/__pycache__/
+.vercel/
+
+# Never commit local credentials. Keep only safe example templates.
 .env
-.env.local
+.env.*
+*.pem
+*.key
+!*.env.example
+!.env.example
